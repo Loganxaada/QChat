@@ -1,0 +1,27 @@
+/* 为主窗口和按钮设置一致的背景颜色 */
+MainWindow {
+    background-color: #f7f7f7; /* 确保布局与窗口背景色一致 */
+}
+
+QToolButton, QPushButton {
+    border: none;
+    background-color: #f7f7f7; /* 按钮背景与主窗口一致 */
+    padding: 2px; /* 通过内边距来模拟无缝效果 */
+}
+
+/* 模拟无缝视觉效果，按钮之间无间距 */
+QToolButton:hover, QPushButton:hover {
+    background-color: #e0e0e0; /* 悬停效果 */
+}
+
+/* 为按钮添加透明边框来视觉上消除间隙 */
+QToolButton {
+    border: 1px solid transparent;
+}
+
+/* 窗口边界部分 */
+QVBoxLayout, QHBoxLayout {
+    margin: 0px;
+    spacing: 0px; /* 移除内置间距 */
+}
+

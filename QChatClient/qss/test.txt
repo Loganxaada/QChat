@@ -1,0 +1,161 @@
+#include "customwidget.h"
+#include <QStyleOption>
+#include <QPainter>
+#include <QMouseEvent>
+#include<QTimer>
+
+CustomWidget::CustomWidget(QWidget *parent)
+    : QWidget(parent)
+{
+    this->setWindowFlags(Qt::FramelessWindowHint | Qt::WindowMinMaxButtonsHint);
+    setAttribute(Qt::WA_Hover);    
+}
+
+void CustomWidget::paintEvent(QPaintEvent *)
+{
+    QStyleOption opt;
+    opt.init(this);
+    QPainter p(this);
+    style()->drawPrimitive(QStyle::PE_Widget, &opt, &p, this);
+}
+
+CustomMoveWidget::CustomMoveWidget(QWidget *parent)
+    : CustomWidget(parent), m_mousePressed(false), m_dragging(false)
+{
+#ifdef Q_OS_WIN32
+    this->setWindowFlags(this->windowFlags() | Qt::FramelessWindowHint);
+#else
+    this->setWindowFlags(Qt::FramelessWindowHint);
+#endif
+    setAttribute(Qt::WA_Hover);
+    
+    setMouseTracking(true);
+    
+    // 初始化边界宽度和区域
+    m_top = m_right = m_bottom = m_left = 10;  // 默认边界宽度
+    initRegions();
+}
+
+CustomMoveWidget::~CustomMoveWidget() {}
+
+void CustomMoveWidget::updateResizeEdges(const QPoint &pos)
+{
+    int margin = 30;  // 边缘检测范围
+    QRect rect = this->rect();
+    m_resizeEdges = Qt::Edges();
+    
+    // 检测边缘并设置相应的光标样式
+    if (pos.x() <= rect.left() + margin) {
+        m_resizeEdges |= Qt::LeftEdge;
+        setCursor(Qt::SizeHorCursor);
+    } else if (pos.x() >= rect.right() - margin) {
+        m_resizeEdges |= Qt::RightEdge;
+        setCursor(Qt::SizeHorCursor);
+    } else if (pos.y() <= rect.top() + margin) {
+        m_resizeEdges |= Qt::TopEdge;
+        setCursor(Qt::SizeVerCursor);
+    } else if (pos.y() >= rect.bottom() - margin) {
+        m_resizeEdges |= Qt::BottomEdge;
+        setCursor(Qt::SizeVerCursor);
+    } else {
+        // 如果不在边缘区域，则重置为默认光标
+        setCursor(Qt::ArrowCursor);
+    }
+    
+    // 设置对角缩放光标样式
+    if ((m_resizeEdges & Qt::LeftEdge) && (m_resizeEdges & Qt::TopEdge)) {
+        setCursor(Qt::SizeFDiagCursor);
+    } else if ((m_resizeEdges & Qt::RightEdge) && (m_resizeEdges & Qt::TopEdge)) {
+        setCursor(Qt::SizeBDiagCursor);
+    } else if ((m_resizeEdges & Qt::LeftEdge) && (m_resizeEdges & Qt::BottomEdge)) {
+        setCursor(Qt::SizeBDiagCursor);
+    } else if ((m_resizeEdges & Qt::RightEdge) && (m_resizeEdges & Qt::BottomEdge)) {
+        setCursor(Qt::SizeFDiagCursor);
+    }
+}
+
+void CustomMoveWidget::initRegions()
+{
+    int width = this->width();
+    int height = this->height();
+    
+    m_regions[Top]          = QRect(m_left, 0, width - m_left - m_right, m_top);
+    m_regions[TopRight]     = QRect(width - m_right, 0, m_right, m_top);
+    m_regions[Right]        = QRect(width - m_right, m_top, m_right, height - m_top - m_bottom);
+    m_regions[RightBottom]  = QRect(width - m_right, height - m_bottom, m_right, m_bottom);
+    m_regions[Bottom]       = QRect(m_left, height - m_bottom, width - m_left - m_right, m_bottom);
+    m_regions[LeftBottom]   = QRect(0, height - m_bottom, m_left, m_bottom);
+    m_regions[Left]         = QRect(0, m_top, m_left, height - m_top - m_bottom);
+    m_regions[LeftTop]      = QRect(0, 0, m_left, m_top);
+    m_regions[Inner]        = QRect(m_left, m_top, width - m_left - m_right, height - m_top - m_bottom);
+}
+
+void CustomMoveWidget::SetBorderWidth(int top, int right, int bottom, int left)
+{
+    
+    m_top = top;
+    m_right = right;
+    m_bottom = bottom;
+    m_left = left;
+    
+    initRegions();
+    
+}
+
+void CustomMoveWidget::mouseMoveEvent(QMouseEvent *e)
+{
+    // 在鼠标移动时持续调用 updateResizeEdges 更新边缘状态和光标样式
+    updateResizeEdges(e->pos());
+    
+    // 如果没有在边缘，则将光标重置为箭头光标
+    if (m_resizeEdges == Qt::Edges()) {
+        setCursor(Qt::ArrowCursor);
+    }
+    
+    // 检测鼠标是否按下并处理拖动
+    if (m_mousePressed && !m_dragging && (e->buttons() & Qt::LeftButton)) {
+        this->move(e->globalPos() - mousePoint);
+        e->accept();
+    } else if (m_dragging && (e->buttons() & Qt::LeftButton)) {
+        QPoint diff = e->pos() - m_dragPos;
+        QRect newRect = geometry();
+        
+        if (m_resizeEdges & Qt::LeftEdge) {
+            newRect.setLeft(newRect.left() + diff.x());
+        }
+        if (m_resizeEdges & Qt::RightEdge) {
+            newRect.setRight(newRect.right() + diff.x());
+        }
+        if (m_resizeEdges & Qt::TopEdge) {
+            newRect.setTop(newRect.top() + diff.y());
+        }
+        if (m_resizeEdges & Qt::BottomEdge) {
+            newRect.setBottom(newRect.bottom() + diff.y());
+        }
+        setGeometry(newRect);
+        e->accept();
+    }
+}
+
+void CustomMoveWidget::mousePressEvent(QMouseEvent *e)
+{
+    if (e->button() == Qt::LeftButton) {
+        updateResizeEdges(e->pos());
+        if (m_resizeEdges != Qt::Edges()) {
+            m_dragging = true;
+            m_dragPos = e->pos();
+        } else {
+            m_mousePressed = true;
+            mousePoint = e->globalPos() - this->pos();
+        }
+        e->accept();
+    }
+}
+
+void CustomMoveWidget::mouseReleaseEvent(QMouseEvent *)
+{
+    m_mousePressed = false;
+    m_dragging = false;
+}
+
+

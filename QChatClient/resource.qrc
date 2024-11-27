@@ -1,0 +1,36 @@
+<RCC>
+    <qresource prefix="/">
+        <file>resource/head_boy.png</file>
+        <file>resource/head_girl.png</file>
+        <file>resource/icon-close.png</file>
+        <file>resource/icon-mininize.png</file>
+        <file>resource/setting.png</file>
+        <file>resource/chat.png</file>
+        <file>resource/add_friend.png</file>
+        <file>resource/menu.png</file>
+        <file>resource/weather.png</file>
+        <file>resource/applation.png</file>
+        <file>resource/friend.png</file>
+        <file>resource/group.png</file>
+        <file>resource/talk.png</file>
+        <file>resource/calendar.png</file>
+        <file>resource/app.png</file>
+        <file>resource/angle-down.png</file>
+        <file>resource/angle-right.png</file>
+        <file>resource/0.bmp</file>
+        <file>resource/1.bmp</file>
+        <file>resource/2.bmp</file>
+        <file>resource/3.bmp</file>
+        <file>resource/4.bmp</file>
+        <file>resource/5.bmp</file>
+        <file>resource/chat_record.png</file>
+        <file>resource/screenshot.png</file>
+        <file>resource/image.png</file>
+        <file>resource/file.png</file>
+        <file>resource/color.png</file>
+        <file>resource/emoji.png</file>
+        <file>resource/font.png</file>
+        <file>resource/maxed.png</file>
+        <file>resource/hasmax.png</file>
+    </qresource>
+</RCC>
